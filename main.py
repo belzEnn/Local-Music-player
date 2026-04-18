@@ -1,25 +1,32 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QListWidget, QLabel, QFrame, QSizePolicy
+from PyQt5.QtWidgets import (
+    QApplication, QHBoxLayout, QVBoxLayout,
+    QLineEdit, QPushButton, QListWidget,
+    QLabel, QFrame, QListWidgetItem
+)
 from PyQt5.QtCore import Qt
+from basewindow import BaseWindow
 
 
-class MusicApp(QWidget):
+class MusicApp(BaseWindow):
     def __init__(self) -> None:
-        super().__init__()
-        self.setWindowTitle("Music Library")
-        self.resize(1000, 650)
+        super().__init__("Music Library")
 
         self.playlists = []
 
-        layout = QVBoxLayout()
-        layout.addLayout(self.initHeaderLayout())
-        layout.addLayout(self.initMainLayout())
-        self.setLayout(layout)
+        self.rootLayout.addWidget(self.initHeader())
+        self.rootLayout.addWidget(self.initBody())
 
         self.loadPlaylists()
 
-    def initHeaderLayout(self) -> QHBoxLayout:
-        headerLayout = QHBoxLayout()
+    # --- HEADER ---
+    def initHeader(self):
+        header = QFrame(self)
+        header.setFixedHeight(50)
+
+        layout = QHBoxLayout(header)
+        layout.setContentsMargins(12, 8, 12, 8)
+        layout.setSpacing(8)
 
         self.searchInput = QLineEdit(self)
         self.searchInput.setPlaceholderText("Search...")
@@ -28,57 +35,92 @@ class MusicApp(QWidget):
         self.searchButton = QPushButton("Search", self)
         self.searchButton.clicked.connect(self.onSearchClicked)
 
-        headerLayout.addWidget(self.searchInput)
-        headerLayout.addWidget(self.searchButton)
+        layout.addWidget(self.searchInput)
+        layout.addWidget(self.searchButton)
 
-        return headerLayout
+        return header
 
-    def initMainLayout(self) -> QHBoxLayout:
-        mainLayout = QHBoxLayout()
+    # --- BODY ---
+    def initBody(self):
+        body = QFrame(self)
 
-        self.sidebarFrame = QFrame(self)
-        self.sidebarFrame.setFrameShape(QFrame.StyledPanel)
-        sidebarLayout = QVBoxLayout(self.sidebarFrame)
+        layout = QHBoxLayout(body)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)
 
-        self.playlistsLabel = QLabel("Playlists", self.sidebarFrame)
-        self.playlistListWidget = QListWidget(self.sidebarFrame)
+        layout.addWidget(self.initSidebar())
+        layout.addWidget(self.initContent())
+
+        return body
+
+    # --- SIDEBAR ---
+    def initSidebar(self):
+        sidebar = QFrame(self)
+        sidebar.setFixedWidth(220)
+
+        layout = QVBoxLayout(sidebar)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(6)
+
+        self.playlistsLabel = QLabel("Playlists", sidebar)
+
+        self.playlistListWidget = QListWidget(sidebar)
         self.playlistListWidget.itemClicked.connect(self.onPlaylistClicked)
 
-        self.addPlaylistButton = QPushButton("Add playlist", self.sidebarFrame)
+        self.playlistListWidget.setSelectionMode(QListWidget.SingleSelection)
+        self.playlistListWidget.setFocusPolicy(Qt.NoFocus)
+
+        self.addPlaylistButton = QPushButton("Add playlist", sidebar)
         self.addPlaylistButton.clicked.connect(self.addPlaylist)
 
-        sidebarLayout.addWidget(self.playlistsLabel)
-        sidebarLayout.addWidget(self.playlistListWidget)
-        sidebarLayout.addWidget(self.addPlaylistButton)
+        layout.addWidget(self.playlistsLabel)
+        layout.addWidget(self.playlistListWidget)
+        layout.addWidget(self.addPlaylistButton)
 
-        self.contentFrame = QFrame(self)
-        self.contentFrame.setFrameShape(QFrame.StyledPanel)
-        contentLayout = QVBoxLayout(self.contentFrame)
+        return sidebar
 
-        self.contentTitle = QLabel("Main area", self.contentFrame)
+    # --- CONTENT ---
+    def initContent(self):
+        content = QFrame(self)
+
+        layout = QVBoxLayout(content)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(8)
+
+        self.contentTitle = QLabel("Main area", content)
         self.contentTitle.setAlignment(Qt.AlignCenter)
 
-        contentLayout.addWidget(self.contentTitle)
+        layout.addWidget(self.contentTitle)
 
-        mainLayout.addWidget(self.sidebarFrame, 1)
-        mainLayout.addWidget(self.contentFrame, 3)
+        return content
 
-        return mainLayout
-
+    # --- LOGIC ---
     def loadPlaylists(self):
-        ...
+        self.playlistListWidget.clear()
+
+        for name in self.playlists:
+            item = QListWidgetItem(name)
+            self.playlistListWidget.addItem(item)
+
+        if self.playlists:
+            self.playlistListWidget.setCurrentRow(0)
+            self.contentTitle.setText(self.playlists[0])
 
     def addPlaylist(self):
-        ...
+        name = f"Playlist {len(self.playlists) + 1}"
+        self.playlists.append(name)
+        self.loadPlaylists()
 
-    def onPlaylistClicked(self):
-        ...
+    def onPlaylistClicked(self, item):
+        self.contentTitle.setText(item.text())
 
     def onSearchClicked(self):
-        ...
+        query = self.searchInput.text().strip()
+        if query:
+            self.contentTitle.setText(f"Search: {query}")
 
     def onSearchChanged(self):
-        ...
+        pass
 
 
 if __name__ == "__main__":
