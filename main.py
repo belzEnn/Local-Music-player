@@ -1,10 +1,12 @@
-import sys
 from PyQt5.QtWidgets import (
     QApplication, QHBoxLayout, QVBoxLayout,
     QLineEdit, QPushButton, QListWidget,
-    QLabel, QFrame, QListWidgetItem
-)
+    QLabel, QFrame, QListWidgetItem, QWidget)
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtCore import QSize, Qt
+
+import sys
 from basewindow import BaseWindow
 
 
@@ -22,21 +24,32 @@ class MusicApp(BaseWindow):
     # --- HEADER ---
     def initHeader(self):
         header = QFrame(self)
-        header.setFixedHeight(50)
+        header.setFixedHeight(48) 
+        header.setStyleSheet("background-color: transparent; border: none;")
 
         layout = QHBoxLayout(header)
-        layout.setContentsMargins(12, 8, 12, 8)
-        layout.setSpacing(8)
+        layout.setContentsMargins(15, 0, 15, 0) 
 
-        self.searchInput = QLineEdit(self)
-        self.searchInput.setPlaceholderText("Search...")
-        self.searchInput.textChanged.connect(self.onSearchChanged)
+        searchContainer = QFrame()
+        searchContainer.setObjectName("SearchContainer")
+        searchLayout = QHBoxLayout(searchContainer)
+        searchLayout.setContentsMargins(10, 0, 10, 0)
+        searchLayout.setSpacing(8)
 
-        self.searchButton = QPushButton("Search", self)
-        self.searchButton.clicked.connect(self.onSearchClicked)
+        searchIcon = QLabel()
+        searchIcon.setPixmap(QPixmap("assets/images/search.png").scaled(16, 16, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        searchIcon.setStyleSheet("border: none; background: transparent;")
 
-        layout.addWidget(self.searchInput)
-        layout.addWidget(self.searchButton)
+        self.searchInput = QLineEdit()
+        self.searchInput.setPlaceholderText("What do you want to play?")
+        self.searchInput.setObjectName("SearchInput")
+        
+        searchLayout.addWidget(searchIcon)
+        searchLayout.addWidget(self.searchInput)
+
+        layout.addStretch(1) 
+        layout.addWidget(searchContainer)
+        layout.addStretch(1)
 
         return header
 
@@ -56,29 +69,44 @@ class MusicApp(BaseWindow):
     # --- SIDEBAR ---
     def initSidebar(self):
         sidebar = QFrame(self)
-        sidebar.setFixedWidth(220)
+        sidebar.setFixedWidth(280)
+        sidebar.setObjectName("SidebarFrame")
 
         layout = QVBoxLayout(sidebar)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(6)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
 
-        self.playlistsLabel = QLabel("Playlists", sidebar)
+        # --- HEADER САЙДБАРА ---
+        libHeader = QWidget()
+        libHeader.setObjectName("LibraryHeader")
+        libHeaderLayout = QHBoxLayout(libHeader)
+        libHeaderLayout.setContentsMargins(0, 0, 0, 0)
+
+        self.playlistsLabel = QLabel("Your Library")
+        self.playlistsLabel.setStyleSheet("font-size: 16px; font-weight: bold; color: white;")
+
+        # Кнопка "+" (иконка вместо текста)
+        self.addPlaylistButton = QPushButton()
+        self.addPlaylistButton.setIcon(QIcon("assets/images/plus.png"))
+        self.addPlaylistButton.setIconSize(QSize(20, 20))
+        self.addPlaylistButton.setCursor(Qt.PointingHandCursor)
+        self.addPlaylistButton.setFixedSize(32, 32)
+        self.addPlaylistButton.setObjectName("AddPlaylistBtn")
+        self.addPlaylistButton.clicked.connect(self.addPlaylist)
+
+        libHeaderLayout.addWidget(self.playlistsLabel)
+        libHeaderLayout.addStretch()
+        libHeaderLayout.addWidget(self.addPlaylistButton)
 
         self.playlistListWidget = QListWidget(sidebar)
         self.playlistListWidget.itemClicked.connect(self.onPlaylistClicked)
-
         self.playlistListWidget.setSelectionMode(QListWidget.SingleSelection)
         self.playlistListWidget.setFocusPolicy(Qt.NoFocus)
 
-        self.addPlaylistButton = QPushButton("Add playlist", sidebar)
-        self.addPlaylistButton.clicked.connect(self.addPlaylist)
-
-        layout.addWidget(self.playlistsLabel)
+        layout.addWidget(libHeader)
         layout.addWidget(self.playlistListWidget)
-        layout.addWidget(self.addPlaylistButton)
-
+        
         return sidebar
-
     # --- CONTENT ---
     def initContent(self):
         content = QFrame(self)

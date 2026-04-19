@@ -1,44 +1,95 @@
+/* --- ГЛОБАЛЬНЫЕ НАСТРОЙКИ --- */
 QWidget {
-    background-color: #0a0a0a;
-    color: #d0d0d0;
-    font-family: "Segoe UI";
+    color: #b3b3b3; /* Стандартный серый текст Spotify */
+    font-family: "Segoe UI", "Inter", sans-serif;
     font-size: 13px;
+    background-color: transparent; /* По умолчанию всё прозрачное */
 }
 
+/* Фон всего окна (задаем через класс окна, если нужно) */
+QMainWindow {
+    background-color: #000000;
+}
+
+/* --- ОСНОВНЫЕ ПАНЕЛИ (Сайдбар и Контент) --- */
 QFrame {
-    background-color: #0d0d0d;
-    border: 1px solid #151515;
+    background-color: #121212; /* Цвет "карточек" */
+    border: none;
+    border-radius: 10px;
 }
 
-QLineEdit {
-    background-color: #0b0b0b;
-    border: 1px solid #1a1a1a;
-    padding: 6px 10px;
-    border-radius: 4px;
-    color: #d0d0d0;
+/* Чтобы хедер не имел фона, если он не внутри карточки */
+#HeaderFrame {
+    background-color: transparent;
 }
 
-QLineEdit:focus {
-    border: 1px solid #2a2a2a;
+/* --- ТЕКСТ И ЗАГОЛОВКИ --- */
+QLabel {
+    background-color: transparent;
+    border: none;
+    color: #ffffff; /* Заголовки обычно белые */
 }
 
+#LibraryHeader {
+    background-color: transparent;
+}
+
+/* --- ПОИСК (Пилюля) --- */
+#SearchContainer {
+    background-color: #242424;
+    border-radius: 16px;       /* Скругление для высоты 32px */
+    min-width: 300px;
+    max-width: 450px;
+    height: 32px;
+    border: 1px solid transparent;
+}
+
+#SearchContainer:hover {
+    background-color: #2a2a2a;
+    border: 1px solid #3e3e3e;
+}
+
+#SearchInput {
+    background-color: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 13px;
+    padding: 0px;
+}
+
+#SearchInput:focus {
+    border: none;
+    outline: none;
+}
+
+/* --- КНОПКИ --- */
 QPushButton {
-    background-color: #0b0b0b;
-    border: 1px solid #1a1a1a;
-    padding: 6px 10px;
-    border-radius: 4px;
-    color: #d0d0d0;
+    background-color: #ffffff;
+    color: #000000;
+    font-weight: bold;
+    border: none;
+    padding: 6px 15px;
+    border-radius: 15px;
 }
 
 QPushButton:hover {
-    background-color: #111111;
+    background-color: #f0f0f0;
 }
 
-QPushButton:pressed {
-    background-color: #080808;
+/* Кнопка "+" в библиотеке */
+#AddPlaylistBtn {
+    background-color: transparent;
+    color: #b3b3b3;
+    border-radius: 16px;
+    padding: 0;
 }
 
-/* ===== LIST ===== */
+#AddPlaylistBtn:hover {
+    background-color: #1f1f1f;
+    color: #ffffff;
+}
+
+/* --- СПИСКИ (Плейлисты) --- */
 QListWidget {
     background-color: transparent;
     border: none;
@@ -46,19 +97,36 @@ QListWidget {
 }
 
 QListWidget::item {
-    padding: 6px 8px;
-    color: #c8c8c8;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    color: #b3b3b3;
 }
 
 QListWidget::item:hover {
-    background-color: #111111;
-}
-
-QListWidget::item:selected {
-    background-color: #161616;
+    background-color: #1a1a1a;
     color: #ffffff;
 }
 
-QLabel {
-    color: #cfcfcf;
+QListWidget::item:selected {
+    background-color: #282828;
+    color: #ffffff;
+}
+
+/* --- СКРОЛЛБАР --- */
+QScrollBar:vertical {
+    border: none;
+    background: transparent;
+    width: 8px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: #404040;
+    min-height: 20px;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #555555;
 }
