@@ -130,3 +130,53 @@ QScrollBar::handle:vertical {
 QScrollBar::handle:vertical:hover {
     background: #555555;
 }
+
+/* --- КНОПКИ В ДИАЛОГЕ --- */
+
+#DialogOkBtn {
+    /* Цвет между белым и серым (E0E0E0 - это светло-серый) */
+    background-color: #e0e0e0; 
+    color: #000000;
+    min-width: 100px;
+    height: 40px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 14px;
+    border: none;
+}
+
+#DialogOkBtn:hover {
+    /* При наведении делаем почти белым */
+    background-color: #ffffff;
+    transform: scale(1.04);
+}
+
+#DialogCancelBtn {
+    background-color: transparent;
+    color: #b3b3b3; /* Серый текст для второстепенной кнопки */
+    border: 1px solid #727272;
+    min-width: 100px;
+    height: 40px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+#DialogCancelBtn:hover {
+    border: 1px solid #ffffff;
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1); /* Легкий отсвет */
+}
+
+/* Добавим отступы для поля ввода, чтобы оно не прилипало к краям */
+QDialog QLineEdit {
+    background-color: #3e3e3e;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 8px 12px;
+    color: white;
+}
+
+QDialog QLineEdit:focus {
+    border: 1px solid #535353;
+    background-color: #4a4a4a;
+}

@@ -1,7 +1,8 @@
 from PyQt5.QtWidgets import (
     QApplication, QHBoxLayout, QVBoxLayout,
     QLineEdit, QPushButton, QListWidget,
-    QLabel, QFrame, QListWidgetItem, QWidget)
+    QLabel, QFrame, QListWidgetItem, 
+    QWidget, QDialog)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import QSize, Qt
@@ -135,9 +136,12 @@ class MusicApp(BaseWindow):
             self.contentTitle.setText(self.playlists[0])
 
     def addPlaylist(self):
-        name = f"Playlist {len(self.playlists) + 1}"
-        self.playlists.append(name)
-        self.loadPlaylists()
+            dialog = CreatePlaylist("New Playlist", "Playlist Name", self)
+            if dialog.exec_():
+                name = dialog.get_text()
+                if name.strip():
+                    self.playlists.append(name.strip())
+                    self.loadPlaylists()
 
     def onPlaylistClicked(self, item):
         self.contentTitle.setText(item.text())
@@ -150,6 +154,39 @@ class MusicApp(BaseWindow):
     def onSearchChanged(self):
         pass
 
+class CreatePlaylist(QDialog):
+    def __init__(self, title, label_text, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.setFixedSize(350, 180)
+
+        self.setWindowFlags(Qt.Dialog | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
+        
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
+
+        self.input = QLineEdit()
+        self.input.setPlaceholderText("Enter playlist name...")
+
+        btn_layout = QHBoxLayout()
+        self.ok_btn = QPushButton("Create")
+        self.cancel_btn = QPushButton("Cancel")
+        
+        self.ok_btn.setObjectName("DialogOkBtn")
+        self.cancel_btn.setObjectName("DialogCancelBtn")
+        
+        self.ok_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+
+        btn_layout.addWidget(self.cancel_btn)
+        btn_layout.addWidget(self.ok_btn)
+
+        layout.addWidget(self.input)
+        layout.addLayout(btn_layout)
+
+    def get_text(self):
+        return self.input.text()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
