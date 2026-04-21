@@ -14,7 +14,7 @@ class BaseWindow(QWidget):
 
     def loadStyles(self):
         try:
-            with open("style.css", "r") as f:
+            with open("assets/style.css", "r") as f:
                 self.setStyleSheet(f.read())
         except FileNotFoundError:
             print("style.css not found")
