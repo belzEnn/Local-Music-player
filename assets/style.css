@@ -172,3 +172,15 @@ QDialog QLineEdit:focus {
     border: 1px solid #535353;
     background-color: #4a4a4a;
 }
+
+#PlayerBar {
+    background-color: #181818;
+    border-top: 1px solid #282828;
+}
+
+QSlider::handle:horizontal {
+    background: #ffffff; 
+    width: 12px;
+    height: 12px;
+    border-radius: 6px;
+}

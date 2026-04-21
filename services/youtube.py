@@ -60,3 +60,14 @@ class YoutubeService(QObject):
         else:
             seconds = 0
         return seconds * 1000
+    
+    def get_track_time_range(self, album, track_index):
+        tracks = album['tracks']
+        start_ms = self.timestamp_to_ms(tracks[track_index]['start'])
+
+        if track_index < len(tracks) - 1:
+            end_ms = self.timestamp_to_ms(tracks[track_index + 1]['start'])
+        else:
+            end_ms = -1 
+            
+        return start_ms, end_ms

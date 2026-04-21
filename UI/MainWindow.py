@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QPushButton, QListWidget, QLabel, 
     QFrame, QListWidgetItem, QWidget, 
     QDialog, QTableWidget, QTableWidgetItem, 
-    QHeaderView, QStackedWidget,
+    QHeaderView, QStackedWidget, QSlider
 )
 from PyQt5.QtCore import Qt, QSize, QUrl
 from PyQt5.QtGui import QIcon, QPixmap
@@ -16,6 +16,9 @@ class App(BaseWindow):
     def __init__(self) -> None:
         super().__init__("Music Library")
         
+        self.current_track_start = 0
+        self.current_track_end = 0
+
         self.service = YoutubeService()
         self.player = QMediaPlayer()
         
@@ -24,8 +27,10 @@ class App(BaseWindow):
 
         self.rootLayout.addWidget(self.initHeader())
         self.rootLayout.addWidget(self.initBody())
-
+        self.rootLayout.addWidget(self.initFooter())
+        
         self.loadPlaylists()
+        self.setupPlayerSignals()
 
     # --- HEADER ---
     def initHeader(self):
@@ -98,6 +103,46 @@ class App(BaseWindow):
         layout.addWidget(self.playlistListWidget)
         return sidebar
 
+    def initFooter(self):
+            footer = QFrame(self)
+            footer.setFixedHeight(80)
+            footer.setObjectName("PlayerBar") # Для стилей в CSS
+            
+            layout = QHBoxLayout(footer)
+            layout.setContentsMargins(20, 0, 20, 0)
+            layout.setSpacing(20)
+
+            # play/pause
+            self.playBtn = QPushButton()
+            self.playBtn.setIcon(QIcon("assets/images/play.png")) # Нужна иконка play
+            self.playBtn.setIconSize(QSize(32, 32))
+            self.playBtn.setFixedSize(40, 40)
+            self.playBtn.setCursor(Qt.PointingHandCursor)
+            self.playBtn.clicked.connect(self.togglePlay)
+
+            # rewind
+            self.progressSlider = QSlider(Qt.Horizontal)
+            self.progressSlider.setObjectName("ProgressSlider")
+            self.progressSlider.sliderMoved.connect(self.seekPosition)
+
+            # volume
+            volumeIcon = QLabel()
+            volumeIcon.setPixmap(QPixmap("assets/images/volume.png").scaled(18, 18, Qt.KeepAspectRatio))
+            
+            self.volumeSlider = QSlider(Qt.Horizontal)
+            self.volumeSlider.setFixedWidth(100)
+            self.volumeSlider.setRange(0, 100)
+            self.volumeSlider.setValue(70) # Громкость по умолчанию
+            self.player.setVolume(70)
+            self.volumeSlider.valueChanged.connect(self.player.setVolume)
+
+            layout.addWidget(self.playBtn)
+            layout.addWidget(self.progressSlider)
+            layout.addWidget(volumeIcon)
+            layout.addWidget(self.volumeSlider)
+
+            return footer
+
     # --- CONTENT ---
     def initContent(self):
         self.contentStack = QStackedWidget()
@@ -162,16 +207,26 @@ class App(BaseWindow):
         self.contentStack.setCurrentIndex(2)
 
     def onTrackDoubleClicked(self, item):
-        track = self.current_album_data['tracks'][item.row()]
-        
-        path = self.service.prepare_and_get_path(
-            self.current_album_data['id'], 
-            self.current_album_data['youtube_url'],
-            self.current_album_data['title']
-        )
-        self.player.setMedia(QMediaContent(QUrl.fromLocalFile(path)))
-        self.player.play()
-        self.player.setPosition(self.service.timestamp_to_ms(track['start']))
+            row = item.row()
+            track = self.current_album_data['tracks'][row]
+
+            self.current_track_start, self.current_track_end = self.service.get_track_time_range(
+                self.current_album_data, row
+            )
+            
+            path = self.service.prepare_and_get_path(
+                self.current_album_data['id'], 
+                self.current_album_data['youtube_url'],
+                self.current_album_data['title']
+            )
+            
+            self.player.setMedia(QMediaContent(QUrl.fromLocalFile(path)))
+            self.player.play()
+            self.player.setPosition(self.current_track_start)
+            
+            if self.current_track_end != -1:
+                duration = self.current_track_end - self.current_track_start
+                self.progressSlider.setRange(0, duration)
 
     def loadPlaylists(self):
         self.playlistListWidget.clear()
@@ -190,7 +245,46 @@ class App(BaseWindow):
         self.contentStack.setCurrentIndex(0)
         self.contentTitle.setText(item.text())
 
-# Класс CreatePlaylist (твой оригинальный)
+    def setupPlayerSignals(self):
+        self.player.positionChanged.connect(self.updatePosition)
+        self.player.durationChanged.connect(self.updateDuration)
+
+        self.player.stateChanged.connect(self.updatePlayButtonIcon)
+
+    def togglePlay(self):
+        if self.player.state() == QMediaPlayer.PlayingState:
+            self.player.pause()
+        else:
+            self.player.play()
+
+    def updatePlayButtonIcon(self, state):
+        icon_path = "assets/images/pause.png" if state == QMediaPlayer.PlayingState else "assets/images/play.png"
+        self.playBtn.setIcon(QIcon(icon_path))
+
+    def updatePosition(self, position):
+        if not self.progressSlider.isSliderDown():
+            self.progressSlider.setValue(position)
+
+    def updateDuration(self, duration):
+            if self.current_track_end == -1:
+                self.current_track_end = duration
+                track_duration = self.current_track_end - self.current_track_start
+                self.progressSlider.setRange(0, track_duration)
+    def updatePosition(self, position):
+        if self.current_track_end != -1 and position >= self.current_track_end:
+            self.player.pause()
+            self.player.setPosition(self.current_track_start) 
+            return
+
+        local_pos = position - self.current_track_start
+        
+        if not self.progressSlider.isSliderDown():
+            self.progressSlider.setValue(max(0, local_pos))
+
+    def seekPosition(self, position):
+        global_pos = self.current_track_start + position
+        self.player.setPosition(global_pos)
+
 class CreatePlaylist(QDialog):
     def __init__(self, title, label_text, parent=None):
         super().__init__(parent)
