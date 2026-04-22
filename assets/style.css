@@ -1,43 +1,41 @@
-/* --- ГЛОБАЛЬНЫЕ НАСТРОЙКИ --- */
+/* --- GLOBAL --- */
 QWidget {
-    color: #b3b3b3; /* Стандартный серый текст Spotify */
+    color: #b3b3b3;
     font-family: "Segoe UI", "Inter", sans-serif;
     font-size: 13px;
-    background-color: transparent; /* По умолчанию всё прозрачное */
+    background-color: transparent;
 }
 
-/* Фон всего окна (задаем через класс окна, если нужно) */
 QMainWindow {
     background-color: #000000;
 }
 
-/* --- ОСНОВНЫЕ ПАНЕЛИ (Сайдбар и Контент) --- */
+/* --- PANELS --- */
 QFrame {
-    background-color: #121212; /* Цвет "карточек" */
+    background-color: #121212;
     border: none;
     border-radius: 10px;
 }
 
-/* Чтобы хедер не имел фона, если он не внутри карточки */
 #HeaderFrame {
     background-color: transparent;
 }
 
-/* --- ТЕКСТ И ЗАГОЛОВКИ --- */
+/* --- TEXT --- */
 QLabel {
     background-color: transparent;
     border: none;
-    color: #ffffff; /* Заголовки обычно белые */
+    color: #ffffff;
 }
 
 #LibraryHeader {
     background-color: transparent;
 }
 
-/* --- ПОИСК (Пилюля) --- */
+/* --- SEARCH --- */
 #SearchContainer {
     background-color: #242424;
-    border-radius: 16px;       /* Скругление для высоты 32px */
+    border-radius: 16px;
     min-width: 300px;
     max-width: 450px;
     height: 32px;
@@ -62,6 +60,7 @@ QLabel {
     outline: none;
 }
 
+/* --- BUTTONS --- */
 QPushButton {
     background-color: #ffffff;
     color: #000000;
@@ -87,6 +86,7 @@ QPushButton:hover {
     color: #ffffff;
 }
 
+/* --- LIST --- */
 QListWidget {
     background-color: transparent;
     border: none;
@@ -110,7 +110,7 @@ QListWidget::item:selected {
     color: #ffffff;
 }
 
-/* --- СКРОЛЛБАР --- */
+/* --- SCROLLBAR --- */
 QScrollBar:vertical {
     border: none;
     background: transparent;
@@ -128,6 +128,7 @@ QScrollBar::handle:vertical:hover {
     background: #555555;
 }
 
+/* --- DIALOG --- */
 #DialogOkBtn {
     background-color: #e0e0e0; 
     color: #000000;
@@ -173,14 +174,285 @@ QDialog QLineEdit:focus {
     background-color: #4a4a4a;
 }
 
+/* --- PLAYER --- */
 #PlayerBar {
-    background-color: #181818;
+    background-color: #121212;
     border-top: 1px solid #282828;
 }
 
+#PlayerBar QPushButton#PlayBtn {
+    background-color: #ffffff;
+    border: none;      
+    border-radius: 20px;  
+}
+
+#PlayerBar QPushButton#PlayBtn:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.05);
+}
+
+/* Ховер эффект для кнопки */
+#PlayerBar QPushButton#PlayBtn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 2px solid #ffffff;
+}
+
+/* --- SLIDER --- */
+QSlider::groove:horizontal {
+    border: none;
+    height: 4px;
+    background: #404040;
+    border-radius: 2px;
+}
+
 QSlider::handle:horizontal {
-    background: #ffffff; 
+    background: #ffffff;
     width: 12px;
     height: 12px;
+    margin: -4px 0;
     border-radius: 6px;
+}
+
+/* --- SLIDER --- */
+QSlider::groove:horizontal {
+    border: none;
+    height: 4px;
+    background: #404040;
+    border-radius: 2px;
+}
+
+QSlider::handle:horizontal {
+    background: #ffffff;
+    width: 12px;
+    height: 12px;
+    margin: -4px 0;
+    border-radius: 6px;
+}
+
+/* --- GLOBAL (DUPLICATE BLOCK) --- */
+QWidget {
+    color: #b3b3b3;
+    font-family: "Segoe UI", "Inter", sans-serif;
+    font-size: 13px;
+    background-color: transparent;
+}
+
+QMainWindow {
+    background-color: #000000;
+}
+
+/* --- PANELS (DUPLICATE BLOCK) --- */
+QFrame {
+    background-color: #121212;
+    border: none;
+    border-radius: 10px;
+}
+
+#HeaderFrame {
+    background-color: transparent;
+}
+
+/* --- TEXT (DUPLICATE BLOCK) --- */
+QLabel {
+    background-color: transparent;
+    border: none;
+    color: #ffffff;
+}
+
+#LibraryHeader {
+    background-color: transparent;
+}
+
+/* --- SEARCH (DUPLICATE BLOCK) --- */
+#SearchContainer {
+    background-color: #242424;
+    border-radius: 16px;
+    min-width: 300px;
+    max-width: 450px;
+    height: 32px;
+    border: 1px solid transparent;
+}
+
+#SearchContainer:hover {
+    background-color: #2a2a2a;
+    border: 1px solid #3e3e3e;
+}
+
+#SearchInput {
+    background-color: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 13px;
+    padding: 0px;
+}
+
+#SearchInput:focus {
+    border: none;
+    outline: none;
+}
+
+/* --- LIST (DUPLICATE BLOCK) --- */
+QListWidget {
+    background-color: transparent;
+    border: none;
+    outline: none;
+}
+
+QListWidget::item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    color: #b3b3b3;
+}
+
+QListWidget::item:hover {
+    background-color: #1a1a1a;
+    color: #ffffff;
+}
+
+QListWidget::item:selected {
+    background-color: #282828;
+    color: #ffffff;
+}
+
+/* --- SCROLLBAR (DUPLICATE BLOCK) --- */
+QScrollBar:vertical {
+    border: none;
+    background: transparent;
+    width: 8px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: #404040;
+    min-height: 20px;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #555555;
+}
+
+/* --- TABLE BASIC --- */
+QTableWidget {
+    background-color: transparent;
+    border: none;
+    color: #b3b3b3;
+    font-size: 14px;
+    outline: none;
+}
+
+QTableWidget::item {
+    padding: 10px;
+    background-color: transparent;
+    border-bottom: 1px solid #1a1a1a;
+}
+
+QTableWidget::item:selected {
+    background-color: #282828;
+    color: #ffffff;
+}
+
+/* --- TABLE HEADER --- */
+QHeaderView::section {
+    background-color: transparent;
+    color: #888888;
+    padding: 4px;
+    border: none;
+    border-bottom: 1px solid #282828;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+/* --- SEARCH RESULTS --- */
+QListWidget#SearchResultsPage::item {
+    background-color: #181818;
+    border-radius: 8px;
+    margin: 5px;
+    padding: 10px;
+}
+
+QListWidget#SearchResultsPage::item:hover {
+    background-color: #282828;
+}
+
+QListWidget#SearchResultsPage::item:selected {
+    background-color: #333333;
+    border: 1px solid #1DB954;
+}
+
+/* --- ALBUM --- */
+#AlbumPage {
+    background-color: transparent;
+}
+
+#AlbumTitleLabel {
+    font-size: 44px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+#AlbumArtistLabel {
+    font-size: 16px;
+    color: #b3b3b3;
+    margin-bottom: 18px;
+}
+
+/* --- TRACK TABLE --- */
+QTableWidget {
+    background-color: transparent;
+    border: none;
+    color: #b3b3b3;
+    font-size: 13px;
+    gridline-color: transparent;
+    outline: none;
+    selection-background-color: transparent;
+    selection-color: #ffffff;
+}
+
+QTableWidget::item {
+    padding: 8px 10px;
+    border-bottom: 1px solid #171717;
+    background-color: transparent;
+}
+
+QTableWidget::item:hover {
+    background-color: #181818;
+    color: #ffffff;
+}
+
+QTableWidget::item:selected {
+    background-color: #222222;
+    color: #ffffff;
+}
+
+QTableWidget::item:column(1) {
+    color: #ffffff;
+    font-size: 13px;
+    padding-left: 12px;
+}
+
+QTableWidget::item:column(0),
+QTableWidget::item:column(2) {
+    color: #8f8f8f;
+}
+
+/* --- TRACK HEADER --- */
+QHeaderView::section {
+    background-color: transparent;
+    color: #7d7d7d;
+    border: none;
+    border-bottom: 1px solid #222222;
+    padding: 6px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* --- TABLE CORNER --- */
+QTableCornerButton::section {
+    border: none;
+    background: transparent;
 }

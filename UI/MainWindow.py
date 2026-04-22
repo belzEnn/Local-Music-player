@@ -3,10 +3,10 @@ from PyQt5.QtWidgets import (
     QPushButton, QListWidget, QLabel, 
     QFrame, QListWidgetItem, QWidget, 
     QDialog, QTableWidget, QTableWidgetItem, 
-    QHeaderView, QStackedWidget, QSlider
+    QHeaderView, QStackedWidget, QSlider,
 )
 from PyQt5.QtCore import Qt, QSize, QUrl
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon, QPixmap, QBrush
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 
 from UI.BaseWindow import BaseWindow
@@ -106,7 +106,7 @@ class App(BaseWindow):
     def initFooter(self):
             footer = QFrame(self)
             footer.setFixedHeight(80)
-            footer.setObjectName("PlayerBar") # Для стилей в CSS
+            footer.setObjectName("PlayerBar")
             
             layout = QHBoxLayout(footer)
             layout.setContentsMargins(20, 0, 20, 0)
@@ -114,7 +114,8 @@ class App(BaseWindow):
 
             # play/pause
             self.playBtn = QPushButton()
-            self.playBtn.setIcon(QIcon("assets/images/play.png")) # Нужна иконка play
+            self.playBtn.setObjectName("PlayBtn") # Даем имя для CSS
+            self.playBtn.setIcon(QIcon("assets/images/play.png")) 
             self.playBtn.setIconSize(QSize(32, 32))
             self.playBtn.setFixedSize(40, 40)
             self.playBtn.setCursor(Qt.PointingHandCursor)
@@ -132,7 +133,7 @@ class App(BaseWindow):
             self.volumeSlider = QSlider(Qt.Horizontal)
             self.volumeSlider.setFixedWidth(100)
             self.volumeSlider.setRange(0, 100)
-            self.volumeSlider.setValue(70) # Громкость по умолчанию
+            self.volumeSlider.setValue(70)
             self.player.setVolume(70)
             self.volumeSlider.valueChanged.connect(self.player.setVolume)
 
@@ -146,35 +147,81 @@ class App(BaseWindow):
     # --- CONTENT ---
     def initContent(self):
         self.contentStack = QStackedWidget()
-        
-        # 1. Заглушка
+
         self.mainAreaPage = QFrame()
         ma_layout = QVBoxLayout(self.mainAreaPage)
         self.contentTitle = QLabel("Select a playlist or search for music")
         self.contentTitle.setAlignment(Qt.AlignCenter)
         ma_layout.addWidget(self.contentTitle)
 
-        # 2. Результаты поиска
         self.searchResultsPage = QListWidget()
+        self.searchResultsPage.setObjectName("SearchResultsPage")
         self.searchResultsPage.itemClicked.connect(self.onAlbumSelected)
 
-        # 3. Список треков
         self.albumPage = QFrame()
+        self.albumPage.setObjectName("AlbumPage")
         album_layout = QVBoxLayout(self.albumPage)
+        album_layout.setContentsMargins(30, 20, 30, 0)
+
+        # ХЕЕР АЛЬБОМА (Обложка + Инфо)
+        header_widget = QWidget()
+        header_layout = QHBoxLayout(header_widget)
+        header_layout.setContentsMargins(0, 0, 0, 20)
+        header_layout.setSpacing(25)
+
+        self.bigCoverLabel = QLabel()
+        self.bigCoverLabel.setFixedSize(180, 180)
+        self.bigCoverLabel.setScaledContents(True)
+
+        info_layout = QVBoxLayout()
+        info_layout.setAlignment(Qt.AlignBottom)
+        
+        type_label = QLabel("ALBUM")
+        type_label.setStyleSheet("color: #b3b3b3; font-size: 12px; font-weight: bold;")
+        
         self.albumHeaderTitle = QLabel("Album Title")
-        self.albumHeaderTitle.setStyleSheet("font-size: 22px; font-weight: bold; color: white;")
+        self.albumHeaderTitle.setObjectName("AlbumTitleLabel")
         
-        self.trackTable = QTableWidget(0, 2)
-        self.trackTable.setHorizontalHeaderLabels(["Title", "Start"])
+        self.albumHeaderArtist = QLabel("Artist Name")
+        self.albumHeaderArtist.setObjectName("AlbumArtistLabel")
+
+        info_layout.addWidget(type_label)
+        info_layout.addWidget(self.albumHeaderTitle)
+        info_layout.addWidget(self.albumHeaderArtist)
+
+        header_layout.addWidget(self.bigCoverLabel)
+        header_layout.addLayout(info_layout)
+        header_layout.addStretch()
+
+        self.trackTable = QTableWidget(0, 3)
+        self.trackTable.setHorizontalHeaderLabels(["#", "TITLE", "START"])
+        self.trackTable.setShowGrid(False)
+        self.trackTable.setAlternatingRowColors(False)
+        self.trackTable.setSelectionBehavior(self.trackTable.SelectRows) 
+        self.trackTable.setEditTriggers(self.trackTable.NoEditTriggers)
+        self.trackTable.verticalHeader().setVisible(False)
+        self.trackTable.horizontalHeader().setStretchLastSection(True)
+        self.trackTable.verticalHeader().setDefaultSectionSize(34)
+        self.trackTable.setColumnWidth(0, 50)
+        self.trackTable.setColumnWidth(2, 110)
+
         self.trackTable.itemDoubleClicked.connect(self.onTrackDoubleClicked)
-        self.trackTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-        
-        album_layout.addWidget(self.albumHeaderTitle)
+
+        h_header = self.trackTable.horizontalHeader()
+        h_header.setSectionResizeMode(0, QHeaderView.Fixed)
+        h_header.setSectionResizeMode(1, QHeaderView.Stretch)
+        h_header.setSectionResizeMode(2, QHeaderView.Fixed)
+        self.trackTable.setColumnWidth(0, 50)
+        self.trackTable.setColumnWidth(2, 100)
+
+        album_layout.addWidget(header_widget)
         album_layout.addWidget(self.trackTable)
 
-        self.contentStack.addWidget(self.mainAreaPage)
-        self.contentStack.addWidget(self.searchResultsPage)
-        self.contentStack.addWidget(self.albumPage)
+        # Добавляем страницы в стек
+        self.contentStack.addWidget(self.mainAreaPage)      # Index 0
+        self.contentStack.addWidget(self.searchResultsPage) # Index 1
+        self.contentStack.addWidget(self.albumPage)         # Index 2
+        
         return self.contentStack
 
     # --- LOGIC ---
@@ -185,24 +232,61 @@ class App(BaseWindow):
             
         results = self.service.search(text)
         self.searchResultsPage.clear()
+
+        self.searchResultsPage.setViewMode(QListWidget.IconMode)
+        self.searchResultsPage.setIconSize(QSize(160, 160))
+        self.searchResultsPage.setResizeMode(QListWidget.Adjust)
+        self.searchResultsPage.setSpacing(20)
+        self.searchResultsPage.setStyleSheet("QListWidget::item { color: white; font-weight: bold; }")
+        
         self.contentStack.setCurrentIndex(1)
         
         for album in results:
-            item = QListWidgetItem(f"{album['artist']} — {album['title']}")
+            cover_path = self.service.get_cover_path(album['id'], album.get('cover_url'))
+
+            icon = QIcon(cover_path)
+            display_text = f"{album['title']}\n{album['artist']}"
+            
+            item = QListWidgetItem(icon, display_text)
+            item.setSizeHint(QSize(180, 220)) # Размер карточки
+            item.setTextAlignment(Qt.AlignCenter)
             item.setData(Qt.UserRole, album)
+            
             self.searchResultsPage.addItem(item)
 
     def onAlbumSelected(self, item):
         album = item.data(Qt.UserRole)
         self.current_album_data = album
-        self.albumHeaderTitle.setText(f"{album['artist']} - {album['title']}")
         
+        # 1. Заполняем инфо в хедере
+        self.albumHeaderTitle.setText(album['title'])
+        self.albumHeaderArtist.setText(album['artist'])
+        
+        # 2. Грузим обложку (используем наш сервис)
+        cover_path = self.service.get_cover_path(album['id'], album.get('cover_url'))
+        self.bigCoverLabel.setPixmap(QPixmap(cover_path))
+        
+        # 3. Заполняем таблицу треков
         self.trackTable.setRowCount(0)
-        for track in album['tracks']:
+        for i, track in enumerate(album['tracks'], start=1):
             row = self.trackTable.rowCount()
             self.trackTable.insertRow(row)
-            self.trackTable.setItem(row, 0, QTableWidgetItem(track['title']))
-            self.trackTable.setItem(row, 1, QTableWidgetItem(track['start']))
+            
+            # Колонка №
+            num_item = QTableWidgetItem(str(i))
+            num_item.setTextAlignment(Qt.AlignCenter)
+            
+            # Колонка Название
+            title_item = QTableWidgetItem(track['title'])
+            title_item.setForeground(QBrush(Qt.white))
+            
+            # Колонка Время
+            time_item = QTableWidgetItem(track['start'])
+            time_item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            
+            self.trackTable.setItem(row, 0, num_item)
+            self.trackTable.setItem(row, 1, title_item)
+            self.trackTable.setItem(row, 2, time_item)
         
         self.contentStack.setCurrentIndex(2)
 
