@@ -4,13 +4,14 @@ from PyQt5.QtWidgets import (
     QFrame, QListWidgetItem, QWidget, 
     QDialog, QTableWidget, QTableWidgetItem, 
     QHeaderView, QStackedWidget, QSlider,
+    QAbstractItemView
 )
 from PyQt5.QtCore import Qt, QSize, QUrl
 from PyQt5.QtGui import QIcon, QPixmap, QBrush
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 
 from UI.BaseWindow import BaseWindow
-from services.youtube import YoutubeService
+from services.youtube import YoutubeService, DownloadWorker
 
 class App(BaseWindow):
     def __init__(self) -> None:
@@ -163,7 +164,6 @@ class App(BaseWindow):
         album_layout = QVBoxLayout(self.albumPage)
         album_layout.setContentsMargins(30, 20, 30, 0)
 
-        # ХЕЕР АЛЬБОМА (Обложка + Инфо)
         header_widget = QWidget()
         header_layout = QHBoxLayout(header_widget)
         header_layout.setContentsMargins(0, 0, 0, 20)
@@ -189,22 +189,25 @@ class App(BaseWindow):
         info_layout.addWidget(self.albumHeaderTitle)
         info_layout.addWidget(self.albumHeaderArtist)
 
+        self.downloadBtn = QPushButton("Download Album")
+        self.downloadBtn.setObjectName("DownloadBtn")
+        self.downloadBtn.setFixedWidth(160)
+        self.downloadBtn.setCursor(Qt.PointingHandCursor)
+        self.downloadBtn.clicked.connect(self.downloadCurrentAlbum)
+
         header_layout.addWidget(self.bigCoverLabel)
         header_layout.addLayout(info_layout)
-        header_layout.addStretch()
+        
+        header_layout.addStretch() 
+        
+        header_layout.addWidget(self.downloadBtn, alignment=Qt.AlignTop)
 
         self.trackTable = QTableWidget(0, 3)
         self.trackTable.setHorizontalHeaderLabels(["#", "TITLE", "START"])
         self.trackTable.setShowGrid(False)
-        self.trackTable.setAlternatingRowColors(False)
-        self.trackTable.setSelectionBehavior(self.trackTable.SelectRows) 
-        self.trackTable.setEditTriggers(self.trackTable.NoEditTriggers)
+        self.trackTable.setSelectionBehavior(QTableWidget.SelectRows) 
+        self.trackTable.setEditTriggers(QTableWidget.NoEditTriggers)
         self.trackTable.verticalHeader().setVisible(False)
-        self.trackTable.horizontalHeader().setStretchLastSection(True)
-        self.trackTable.verticalHeader().setDefaultSectionSize(34)
-        self.trackTable.setColumnWidth(0, 50)
-        self.trackTable.setColumnWidth(2, 110)
-
         self.trackTable.itemDoubleClicked.connect(self.onTrackDoubleClicked)
 
         h_header = self.trackTable.horizontalHeader()
@@ -217,10 +220,9 @@ class App(BaseWindow):
         album_layout.addWidget(header_widget)
         album_layout.addWidget(self.trackTable)
 
-        # Добавляем страницы в стек
-        self.contentStack.addWidget(self.mainAreaPage)      # Index 0
-        self.contentStack.addWidget(self.searchResultsPage) # Index 1
-        self.contentStack.addWidget(self.albumPage)         # Index 2
+        self.contentStack.addWidget(self.mainAreaPage)
+        self.contentStack.addWidget(self.searchResultsPage)
+        self.contentStack.addWidget(self.albumPage)
         
         return self.contentStack
 
@@ -255,41 +257,30 @@ class App(BaseWindow):
             self.searchResultsPage.addItem(item)
 
     def onAlbumSelected(self, item):
-        album = item.data(Qt.UserRole)
+        album_meta = item.data(Qt.UserRole)
+        album = self.service.get_album_details(album_meta['id'])
+        if not album:
+            return
+
         self.current_album_data = album
         
-        # 1. Заполняем инфо в хедере
+        self.update_download_button_state()
+
         self.albumHeaderTitle.setText(album['title'])
         self.albumHeaderArtist.setText(album['artist'])
-        
-        # 2. Грузим обложку (используем наш сервис)
         cover_path = self.service.get_cover_path(album['id'], album.get('cover_url'))
         self.bigCoverLabel.setPixmap(QPixmap(cover_path))
         
-        # 3. Заполняем таблицу треков
         self.trackTable.setRowCount(0)
-        for i, track in enumerate(album['tracks'], start=1):
+        for i, track in enumerate(album.get('tracks', []), start=1):
             row = self.trackTable.rowCount()
             self.trackTable.insertRow(row)
-            
-            # Колонка №
-            num_item = QTableWidgetItem(str(i))
-            num_item.setTextAlignment(Qt.AlignCenter)
-            
-            # Колонка Название
-            title_item = QTableWidgetItem(track['title'])
-            title_item.setForeground(QBrush(Qt.white))
-            
-            # Колонка Время
-            time_item = QTableWidgetItem(track['start'])
-            time_item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
-            
-            self.trackTable.setItem(row, 0, num_item)
-            self.trackTable.setItem(row, 1, title_item)
-            self.trackTable.setItem(row, 2, time_item)
+            self.trackTable.setItem(row, 0, QTableWidgetItem(str(i)))
+            self.trackTable.setItem(row, 1, QTableWidgetItem(track['title']))
+            self.trackTable.setItem(row, 2, QTableWidgetItem(track['start']))
         
         self.contentStack.setCurrentIndex(2)
-
+        
     def onTrackDoubleClicked(self, item):
             row = item.row()
             track = self.current_album_data['tracks'][row]
@@ -369,6 +360,57 @@ class App(BaseWindow):
         global_pos = self.current_track_start + position
         self.player.setPosition(global_pos)
 
+    def update_download_button_state(self):
+        if not self.current_album_data: return
+        
+        is_downloaded = self.service.is_album_downloaded(self.current_album_data['id'])
+        
+        if is_downloaded:
+            self.downloadBtn.setText("Delete Album")
+            self.downloadBtn.setProperty("state", "downloaded")
+        else:
+            self.downloadBtn.setText("Download")
+            self.downloadBtn.setProperty("state", "normal")
+            
+        self.downloadBtn.style().unpolish(self.downloadBtn)
+        self.downloadBtn.style().polish(self.downloadBtn)
+
+    def downloadCurrentAlbum(self):
+        if not self.current_album_data:
+            return
+        
+        album_id = self.current_album_data['id']
+        
+        if self.service.is_album_downloaded(album_id):
+            dialog = ConfirmDialog(
+                "Deleting", 
+                f"Are you sure you want to delete '{self.current_album_data['title']}'?", 
+                self
+            )
+            if dialog.exec_(): # Если нажал "Да"
+                if self.service.delete_album(album_id):
+                    print("Альбом выпилен!")
+                    self.update_download_button_state()
+            return
+
+        self.downloadBtn.setText("Downloading...")
+        self.downloadBtn.setEnabled(False)
+        
+        self.worker = DownloadWorker(
+            self.service, 
+            album_id, 
+            self.current_album_data['youtube_url']
+        )
+        self.worker.finished.connect(self.on_download_finished)
+        self.worker.start()
+
+    def on_download_finished(self, success):
+        self.downloadBtn.setEnabled(True)
+        if success:
+            self.update_download_button_state()
+        else:
+            self.downloadBtn.setText("Error!")
+
 class CreatePlaylist(QDialog):
     def __init__(self, title, label_text, parent=None):
         super().__init__(parent)
@@ -402,3 +444,27 @@ class CreatePlaylist(QDialog):
 
     def get_text(self):
         return self.input.text()
+    
+class ConfirmDialog(QDialog):
+    def __init__(self, title, message, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.setFixedSize(300, 150)
+        self.setWindowFlags(Qt.Dialog | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
+        self.setStyleSheet("background-color: #121212; color: white;") # Под твой темный стиль
+
+        layout = QVBoxLayout(self)
+        msg = QLabel(message)
+        msg.setAlignment(Qt.AlignCenter)
+        layout.addWidget(msg)
+
+        btns = QHBoxLayout()
+        yes_btn = QPushButton("Yes")
+        no_btn = QPushButton("No")
+        
+        yes_btn.clicked.connect(self.accept)
+        no_btn.clicked.connect(self.reject)
+        
+        btns.addWidget(no_btn)
+        btns.addWidget(yes_btn)
+        layout.addLayout(btns)
